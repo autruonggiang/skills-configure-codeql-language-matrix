@@ -6,48 +6,39 @@ _Configure your CodeQL workflows with a language matrix to simplify your code sc
 
 </header>
 
-## Step 1: Add a language matrix to your CodeQL workflow file
+## Step 2: Have autobuild run only when needed
 
-_Welcome to "Configuring a CodeQL language matrix"! :wave:_
+_Nice work! :tada: You modified your workflow to use a language matrix!_
 
-## CodeQL language matrices
+With the language matrix specified we can see the languages we want to scan. One of those languages is a compiled language, and as such, will not work correctly with how we have the workflow set up. We need to make sure the autobuild step is included _and_ only runs when it is needed.
 
-CodeQL language matrices allow you to configure your CodeQL workflows with a language matrix to simplify your code scanning workflows. This allows you to have a single code scanning workflow that covers all the languages in your repository.
+Autobuild for CodeQL is a feature that automatically attempts to build any compiled languages in your repository. It works by detecting the build system in your repository and executing the appropriate commands to compile the code, enabling CodeQL to analyze the compiled language.
 
-### Importance of using languages matrices with code scanning
+Let's try this out with our existing CodeQL workflow file.
 
-1. **Simplicity**: Using a language matrix with CodeQL simplifies your workflow by allowing you to manage multiple languages in a single workflow file. This eliminates the need for separate workflows for each language, making your code scanning process more streamlined and manageable.
-2. **Flexibility**: A language matrix provides flexibility, as it allows you to easily add or remove languages from your workflow. This means you can quickly adapt your code scanning process to changes in your project's language usage.
-3. **Consistency**: By using a language matrix, you ensure consistent code scanning across all languages used in your project. This helps maintain the quality and security of your codebase, regardless of the language it's written in.
+### :keyboard: Activity: Configure the workflow to use autobuild for the `java-kotlin` language
 
-Remember, a well-configured CodeQL setup is key to maintaining a secure and reliable codebase.
-
-### :keyboard: Activity: Configure your `codeql.yml` file to use a language matrix
-
-1. In the `Code` tab, locate the `.github/workflows` folder.
-1. In the `codeql.yml` file, above the `steps` section, add the following:
+1. Navigate to the `.github/workflows` directory in your repository.
+1. Open the `codeql.yml` file.
+1. Add the autobuild step to the file in between the `Initialize CodeQL` and `Perform CodeQL Analysis` steps:
     ```yaml
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'go', 'java-kotlin', 'javascript-typescript', 'python' ]
-        # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        # Use only 'java-kotlin' to analyze code written in Java, Kotlin, or both
-        # Use only 'javascript-typescript' to analyze code written in JavaScript, TypeScript, or both
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    ```
+1. Ensure that your indentation is correct after adding the step.
+1. Now we need to make sure that the autobuild step only runs when it is needed. Add to the `Autobuild` step a conditional expression that checks to make sure the language is `java-kotlin`.
 
-    ```
-1. Ensure that your indentation is correct after adding the strategy section.
-1. Now that you have added the strategy, you need to update CodeQL to actually use the language matrix. Add the following to the CodeQL init action:
-    ```yaml
-      with:
-        languages: ${{ matrix.language }}
-    ```
-1. Finally, we need to add the language matrix to the CodeQL analyze action. Add the following to the CodeQL analyze action:
-    ```yaml
-      with:
-        category: ${{ matrix.language }}
-    ```
+<details>
+  <summary>Autobuild step after adding conditional</summary>
+
+```yaml
+    - if: ${{ contains(matrix.language, 'java-kotlin') }}
+      name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+```
+
+</details>
+    
 1. Commit the changes directly to the `main` branch.
 1. Wait about 20 seconds then refresh this page (the one you're following instructions from). [GitHub Actions](https://docs.github.com/en/actions) will automatically update to the next step.
 
